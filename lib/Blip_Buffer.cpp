@@ -19,6 +19,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA */
 
 #include BLARGG_SOURCE_BEGIN
 
+//Casey: This is important!
 Blip_Buffer::Blip_Buffer()
 {
 	samples_per_sec = 44100;

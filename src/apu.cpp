@@ -6,6 +6,7 @@ namespace APU {
 
 
 Nes_Apu apu;
+// Casey: This is the video buffer!
 Blip_Buffer buf;
 
 const int OUT_SIZE = 4096;
@@ -16,6 +17,7 @@ void init()
     buf.sample_rate(96000);
     buf.clock_rate(1789773);
 
+    // Casey: This is where the video buffer is given to the apu!
     apu.output(&buf);
     apu.dmc_reader(CPU::dmc_read);
 }
