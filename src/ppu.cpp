@@ -1,3 +1,4 @@
+#include <cstring>
 #include "cartridge.hpp"
 #include "cpu.hpp"
 #include "ppu.hpp"
