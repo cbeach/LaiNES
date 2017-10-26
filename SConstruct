@@ -10,6 +10,6 @@ env = Environment(ENV       = environ,
                   CXXFLAGS  = flags,
                   LINKFLAGS = flags,
                   CPPPATH   = ['#simpleini', '#lib/include', '#src/include'],
-                  LIBS      = ['SDL2', 'SDL2_image', 'SDL2_ttf'])
+                  LIBS      = [])
 
 env.Program('laines', Glob('build/*/*.cpp') + Glob('build/*/*/*.cpp'))

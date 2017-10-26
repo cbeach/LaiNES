@@ -1,4 +1,3 @@
-#include "gui.hpp"
 #include "cpu.hpp"
 #include "apu.hpp"
 
@@ -44,8 +43,8 @@ void run_frame(int elapsed)
     apu.end_frame(elapsed);
     buf.end_frame(elapsed);
 
-    if (buf.samples_avail() >= OUT_SIZE)
-        GUI::new_samples(outBuf, buf.read_samples(outBuf, OUT_SIZE));
+    //if (buf.samples_avail() >= OUT_SIZE)
+    //    GUI::new_samples(outBuf, buf.read_samples(outBuf, OUT_SIZE));
 }
 
 
