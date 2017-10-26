@@ -1,3 +1,5 @@
+#include "apu.hpp"
+
 namespace Joypad {
 
 
