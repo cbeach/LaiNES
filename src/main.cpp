@@ -23,7 +23,7 @@ void run() {
             }
         ************************/
 
-        if (not pause) CPU::run_frame();
+        if (true) CPU::run_frame();
     }
 }
 
