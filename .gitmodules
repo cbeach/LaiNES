@@ -1,3 +1,6 @@
 [submodule "simpleini"]
 	path = simpleini
 	url = https://github.com/brofield/simpleini.git
+[submodule "data_contracts"]
+	path = lib/data_contracts
+	url = git@github.com:cbeach/data_contracts.git

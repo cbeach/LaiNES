@@ -2,3 +2,4 @@
 laines
 *.o
 *.sw[mnop]
+roms/*
