@@ -2,6 +2,12 @@
 #include "cartridge.hpp"
 #include "cpu.hpp"
 #include "ppu.hpp"
+#include <execinfo.h>
+#include <iostream>
+
+#include "deep_thought.grpc.pb.h"
+using org::beachc::deep_thought::MachineState;
+using org::beachc::deep_thought::VideoFrame;
 
 namespace PPU {
 #include "palette.inc"
@@ -264,14 +270,14 @@ void pixel()
 }
 
 /* Execute a cycle of a scanline */
-template<Scanline s> void scanline_cycle()
+template<Scanline s> void scanline_cycle(MachineState* m_state, VideoFrame* frame)
 {
     static u16 addr;
 
     if (s == NMI and dot == 1) { status.vBlank = true; if (ctrl.nmi) CPU::set_nmi(); }
     else if (s == POST and dot == 0) {
-      // Casey: Save/Send/process the raw frame here?
-      // GUI::new_frame(pixels);
+        // Casey: Save/Send/process the raw frame here?
+        // Write the VideoFrame here!
     }
     else if (s == VISIBLE or s == PRE)
     {
@@ -320,14 +326,14 @@ template<Scanline s> void scanline_cycle()
 }
 
 /* Execute a PPU cycle. */
-void step()
+void step(MachineState* m_state, VideoFrame* frame)
 {
     switch (scanline)
     {
-        case 0 ... 239:  scanline_cycle<VISIBLE>(); break;
-        case       240:  scanline_cycle<POST>();    break;
-        case       241:  scanline_cycle<NMI>();     break;
-        case       261:  scanline_cycle<PRE>();     break;
+        case 0 ... 239:  scanline_cycle<VISIBLE>(m_state, frame); break;
+        case       240:  scanline_cycle<POST>(m_state, frame);    break;
+        case       241:  scanline_cycle<NMI>(m_state, frame);     break;
+        case       261:  scanline_cycle<PRE>(m_state, frame);     break;
     }
     // Update dot and scanline counters:
     if (++dot > 340)

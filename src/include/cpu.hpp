@@ -2,6 +2,10 @@
 #include "common.hpp"
 #include <Nes_Apu.h>
 
+#include "deep_thought.grpc.pb.h"
+using org::beachc::deep_thought::MachineState;
+using org::beachc::deep_thought::VideoFrame;
+
 namespace CPU {
 
 
@@ -26,7 +30,6 @@ void set_nmi(bool v = true);
 void set_irq(bool v = true);
 int dmc_read(void*, cpu_addr_t addr);
 void power();
-void run_frame();
-
+void run_frame(MachineState*, VideoFrame*);
 
 }

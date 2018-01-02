@@ -7,7 +7,13 @@
 #include "ppu.hpp"
 #include "cpu.hpp"
 
+#include "deep_thought.grpc.pb.h"
+using org::beachc::deep_thought::MachineState;
+using org::beachc::deep_thought::VideoFrame;
 namespace CPU {
+
+MachineState* input_state;
+VideoFrame* output_frame;
 
 
 /* CPU state */
@@ -24,7 +30,12 @@ inline int elapsed() { return TOTAL_CYCLES - remainingCycles; }
 
 /* Cycle emulation */
 #define T   tick()
-inline void tick() { PPU::step(); PPU::step(); PPU::step(); remainingCycles--; }
+inline void tick() { 
+  PPU::step(input_state, output_frame); 
+  PPU::step(input_state, output_frame); 
+  PPU::step(input_state, output_frame); 
+  remainingCycles--; 
+}
 
 /* Flags updating */
 inline void upd_cv(u8 x, u8 y, s16 r) { P[C] = (r>0xFF); P[V] = ~(x^y) & (x^r) & 0x80; }
@@ -258,19 +269,22 @@ void power()
 }
 
 /* Run the CPU for roughly a frame */
-void run_frame()
+void run_frame(MachineState* m_state, VideoFrame* frame)
 {
-    remainingCycles += TOTAL_CYCLES;
+  input_state = m_state;
+  output_frame = frame;
 
-    while (remainingCycles > 0)
-    {
-        if (nmi) INT<NMI>();
-        else if (irq and !P[I]) INT<IRQ>();
+  remainingCycles += TOTAL_CYCLES;
 
-        exec();
-    }
+  while (remainingCycles > 0)
+  {
+      if (nmi) INT<NMI>();
+      else if (irq and !P[I]) INT<IRQ>();
 
-    APU::run_frame(elapsed());
+      exec();
+  }
+
+  APU::run_frame(elapsed());
 }
 
 

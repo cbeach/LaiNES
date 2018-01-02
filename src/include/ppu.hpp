@@ -1,6 +1,10 @@
 #pragma once
 #include "common.hpp"
 
+#include "deep_thought.grpc.pb.h"
+using org::beachc::deep_thought::MachineState;
+using org::beachc::deep_thought::VideoFrame;
+
 namespace PPU {
 
 
@@ -86,7 +90,7 @@ union Addr
 
 template <bool write> u8 access(u16 index, u8 v = 0);
 void set_mirroring(Mirroring mode);
-void step();
+void step(MachineState*, VideoFrame*);
 void reset();
 
 
