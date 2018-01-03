@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <iostream>
 
 #include "apu.hpp"
 #include "cartridge.hpp"
@@ -60,8 +61,6 @@ class NESEmulatorImpl final : public Emulator::Service {
     if (pid == 0) {
       //Child process
       
-      //load cartridge
-      APU::init();
       while (true) {
         // Handle events:
         /************************ refactor into a streaming endpoint for grpc
@@ -77,10 +76,20 @@ class NESEmulatorImpl final : public Emulator::Service {
           }
         ************************/
         if (*state_ready == true) {
-          //
+          if (!Cartridge::loaded()) {
+            //Handle cases in which we're downloading the rom, or the rom is given as data 
+            std::cout << "loading: " 
+              << shared_state->nes_console_state().game().name() << std::endl; 
+
+            Cartridge::load(shared_state->nes_console_state().game().path().c_str()); 
+            APU::init();
+
+          }
           CPU::run_frame(shared_state, shared_frame);
           *state_ready = false;
           *frame_ready = true;
+        } else {
+          usleep(10);
         }
       }
     } else if (pid > 0) {

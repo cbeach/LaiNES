@@ -57,11 +57,11 @@ template<bool wr> inline u8 access(u16 addr, u8 v = 0)
         case 0x4000 ... 0x4013:
         case            0x4015:          return APU::access<wr>(elapsed(), addr, v);
         case            0x4017:  if (wr) return APU::access<wr>(elapsed(), addr, v);
-                                 else return Joypad::read_state(1);                  // Joypad 1.
+                                 else return Joypad::read_state(state->nes_console_state().player2_input());                  // Joypad 1.
 
         case            0x4014:  if (wr) dma_oam(v); break;                          // OAM DMA.
         case            0x4016:  if (wr) { Joypad::write_strobe(v & 1); break; }     // Joypad strobe.
-                                 else return Joypad::read_state(0);                  // Joypad 0.
+                                 else return Joypad::read_state(state->nes_console_state().player1_input());                  // Joypad 0.
         case 0x4018 ... 0xFFFF:  return Cartridge::access<wr>(addr, v);              // Cartridge.
     }
     return 0;
