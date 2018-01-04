@@ -12,8 +12,8 @@ using org::beachc::deep_thought::MachineState;
 using org::beachc::deep_thought::VideoFrame;
 namespace CPU {
 
-MachineState* input_state;
-VideoFrame* output_frame;
+MachineState input_state;
+VideoFrame output_frame;
 
 
 /* CPU state */
@@ -57,11 +57,11 @@ template<bool wr> inline u8 access(u16 addr, u8 v = 0)
         case 0x4000 ... 0x4013:
         case            0x4015:          return APU::access<wr>(elapsed(), addr, v);
         case            0x4017:  if (wr) return APU::access<wr>(elapsed(), addr, v);
-                                 else return Joypad::read_state(state->nes_console_state().player2_input());                  // Joypad 1.
+                                 else return Joypad::read_state(input_state.nes_console_state().player2_input());                  // Joypad 1.
 
         case            0x4014:  if (wr) dma_oam(v); break;                          // OAM DMA.
         case            0x4016:  if (wr) { Joypad::write_strobe(v & 1); break; }     // Joypad strobe.
-                                 else return Joypad::read_state(state->nes_console_state().player1_input());                  // Joypad 0.
+                                 else return Joypad::read_state(input_state.nes_console_state().player1_input());                  // Joypad 0.
         case 0x4018 ... 0xFFFF:  return Cartridge::access<wr>(addr, v);              // Cartridge.
     }
     return 0;
@@ -269,7 +269,7 @@ void power()
 }
 
 /* Run the CPU for roughly a frame */
-void run_frame(MachineState* m_state, VideoFrame* frame)
+void run_frame(MachineState& m_state, VideoFrame& frame)
 {
   input_state = m_state;
   output_frame = frame;

@@ -270,7 +270,7 @@ void pixel()
 }
 
 /* Execute a cycle of a scanline */
-template<Scanline s> void scanline_cycle(MachineState* m_state, VideoFrame* frame)
+template<Scanline s> void scanline_cycle(MachineState& m_state, VideoFrame& frame)
 {
     static u16 addr;
 
@@ -278,6 +278,7 @@ template<Scanline s> void scanline_cycle(MachineState* m_state, VideoFrame* fram
     else if (s == POST and dot == 0) {
         // Casey: Save/Send/process the raw frame here?
         // Write the VideoFrame here!
+      frame.mutable_raw_frame()->set_data(pixels, sizeof(pixels));
     }
     else if (s == VISIBLE or s == PRE)
     {
@@ -326,7 +327,7 @@ template<Scanline s> void scanline_cycle(MachineState* m_state, VideoFrame* fram
 }
 
 /* Execute a PPU cycle. */
-void step(MachineState* m_state, VideoFrame* frame)
+void step(MachineState& m_state, VideoFrame& frame)
 {
     switch (scanline)
     {

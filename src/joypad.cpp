@@ -3,7 +3,7 @@
 #include "deep_thought.grpc.pb.h"
 using org::beachc::deep_thought::MachineState;
 using org::beachc::deep_thought::VideoFrame;
-using org::beachc::nes::NESControllerState;
+using org::beachc::deep_thought::nes::NESControllerState;
 namespace Joypad {
 
 
@@ -13,6 +13,7 @@ bool strobe;        // Joypad strobe latch.
 /* Read joypad state (NES register format) */
 u8 read_state(NESControllerState controller)
 {
+    int n = 0;
     // When strobe is high, it keeps reading A:
     // Casey: Change this from the gui to some kind of grpc thing
     //if (strobe)
