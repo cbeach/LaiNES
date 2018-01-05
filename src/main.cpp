@@ -71,32 +71,34 @@ class NESEmulatorImpl final : public Emulator::Service {
       cout << "child: starting main loop" << endl;
       for (int i = 0; true; i++) {
         cout << "child: check if state is ready - lock value is: " << *state_ready << endl;
+        // Check to see if the state is ready
         if (*state_ready == true) {
           MachineState state; 
           VideoFrame frame;
           cout << "child: shared state buffer value is: " << (char*) shared_state_buffer << endl;
           cout << "child: parsing shared state buffer" << endl;
+
+          // Parse the state out of shared memory
           if (state.ParseFromString(std::string((char*) shared_state_buffer))) {
             cout << "child: successfully parsed the state" << endl;
           } else {
             cout << "child: failed to parse the state" << endl;
           }
-          std::string private_frame_buffer;
-          std::string data = "hello, world: " + std::to_string(i);
-          cout << "child: update the shared_frame_buffer" << endl;
-          frame.mutable_raw_frame()->set_data(data);
-          cout << "child: Game - " << state.nes_console_state().game().name() << " | "
-            << frame.raw_frame().data() << endl;
+
+          //Check to see if a cartridge is loaded, load if not
           if (!Cartridge::loaded()) {
             //Handle cases in which we're downloading the rom, or the rom is given as data 
-            cout << "loading: " 
-              << state.nes_console_state().game().name() << endl; 
-
             Cartridge::load(state.nes_console_state().game().path().c_str()); 
             APU::init();
-
           }
+          //Run a frame, pass the state and frame variables by reference
           CPU::run_frame(state, frame);
+
+          //Put the machine state into the VideoFrame
+          frame.mutable_machine_state()->CopyFrom(state);
+
+          //Serialize the VideoFrame and and copy it into shared memory
+          std::string private_frame_buffer;
           if (frame.SerializeToString(&private_frame_buffer)) {
             memcpy((void*) shared_frame_buffer, (void*) private_frame_buffer.c_str(), 
                 private_frame_buffer.length() + 1);
@@ -105,6 +107,7 @@ class NESEmulatorImpl final : public Emulator::Service {
           } else {
             cout << "child: failed frame serialization" << endl;
           }
+
           cout << "child: update the shared locks" << endl;
           *state_ready = false;
           *frame_ready = true;
@@ -120,6 +123,8 @@ class NESEmulatorImpl final : public Emulator::Service {
       for (int i = 0; stream->Read(&state); i++) {
         std::string private_state_buffer;
         cout << "parent: Beginning serialization" << endl;
+        //Received a new event from the user.
+        //Serialize it and copy the resulting data into the shared memory
         if (state.SerializeToString(&private_state_buffer)) {
           memcpy((void*) shared_state_buffer, (void*) private_state_buffer.c_str(), 
               private_state_buffer.length() + 1);
@@ -128,20 +133,21 @@ class NESEmulatorImpl final : public Emulator::Service {
         } else {
           cout << "parent: failed state serialization" << endl;
         }
+        //Inform the child that a new event is ready to be read out of memory.
         *state_ready = true;
-        //Read a new machine state off of the network
+
         //Wait for the child process to make a new VideoFrame available
         while (*frame_ready == false) { 
           cout << "parent: frame lock value is: " << *frame_ready << " sleeping" << endl;
-          usleep(1000000); 
+          usleep(10); 
         }
+
         if (*frame_ready == true) {
           cout << "parent: frame is ready" << endl;
           cout << "parent: update the frame lock" << endl;
           *frame_ready = false;
           
-          //Write the new frame to the network
-
+          //Parse the video frame out of memory
           VideoFrame frame;
           cout << "parent: shared frame buffer value is: " << (char*) shared_frame_buffer << endl;
           if (frame.ParseFromString(std::string((char*) shared_frame_buffer))) {
@@ -151,20 +157,19 @@ class NESEmulatorImpl final : public Emulator::Service {
           }
           cout << "parent: Game - " << state.nes_console_state().game().name() << " | "
             << frame.raw_frame().data() << endl;
+          //Send the frame data over the wire
           stream->Write(frame);
         }
         
-        //Wait for the child process to finish reading the machine state before continuing
+        //Make sure that the child process has released the machine state before continuing
         while (*state_ready == true) { 
           cout << "parent: waiting for child to release state" << endl;
-          usleep(1000000); 
+          usleep(10); 
         }
         cout << "parent: state released. Continueing with main loop." << endl;
-        if (i > 100) {
-          break;
-        }
       }
     }
+
     munmap(shared_frame_buffer, sizeof(VideoFrame));
     munmap(shared_state_buffer, sizeof(MachineState));
     munmap(frame_ready, sizeof(bool));
@@ -175,9 +180,6 @@ class NESEmulatorImpl final : public Emulator::Service {
 };
 
 int main(int argc, char *argv[]) {
-    // GUI::load_settings();
-    // GUI::init();
-    // GUI::run();
   std::string server_address("0.0.0.0:50051");
 
   NESEmulatorImpl emulator;

@@ -4,3 +4,11 @@ laines
 *.sw[mnop]
 roms/*
 *.nes
+*.pyc
+
+test_client/common_pb2_grpc.py
+test_client/common_pb2.py
+test_client/deep_thought_pb2_grpc.py
+test_client/deep_thought_pb2.py
+test_client/nes_pb2_grpc.py
+test_client/nes_pb2.py
