@@ -32,7 +32,8 @@ def generate_machine_states():
   ms = deep_thought_pb2.MachineState(
     nes_console_state=nes_pb2.NESConsoleState(
       game=common_pb2.Game(
-        name="This is my game"
+        name="Super Mario Brothers",
+        path="/home/mcsmash/dev/emulators/LaiNES/smb.nes"
       )
     )
   )
@@ -46,7 +47,7 @@ def play_game_stream(stub):
   counter = 0
   for response in responses:
     counter += 1
-    print(response.raw_frame.data)
+    print('frame# {}: {}'.format(i, response.raw_frame.data))
 
 
 def run():

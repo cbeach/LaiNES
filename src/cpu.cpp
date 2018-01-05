@@ -6,6 +6,7 @@
 #include "joypad.hpp"
 #include "ppu.hpp"
 #include "cpu.hpp"
+#include "easylogging++.hpp"
 
 #include "deep_thought.grpc.pb.h"
 using org::beachc::deep_thought::MachineState;
@@ -16,6 +17,7 @@ MachineState input_state;
 VideoFrame output_frame;
 
 
+int step_counter = 0;
 /* CPU state */
 u8 ram[0x800];
 u8 A, X, Y, S;
@@ -34,6 +36,7 @@ inline void tick() {
   PPU::step(input_state, output_frame); 
   PPU::step(input_state, output_frame); 
   PPU::step(input_state, output_frame); 
+  LOG(DEBUG) << "step " << step_counter++ << ": " << input_state.nes_console_state().game().name();
   remainingCycles--; 
 }
 

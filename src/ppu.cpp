@@ -5,6 +5,8 @@
 #include <execinfo.h>
 #include <iostream>
 
+#include "easylogging++.hpp"
+
 #include "deep_thought.grpc.pb.h"
 using org::beachc::deep_thought::MachineState;
 using org::beachc::deep_thought::VideoFrame;
@@ -274,14 +276,27 @@ template<Scanline s> void scanline_cycle(MachineState& m_state, VideoFrame& fram
 {
     static u16 addr;
 
-    if (s == NMI and dot == 1) { status.vBlank = true; if (ctrl.nmi) CPU::set_nmi(); }
+    if (s == NMI and dot == 1) { 
+      LOG(DEBUG) << "scanline_cycle: s = NMI";
+      status.vBlank = true; 
+      if (ctrl.nmi) {
+        CPU::set_nmi(); 
+      }
+    }
     else if (s == POST and dot == 0) {
+      LOG(DEBUG) << "scanline_cycle: s = POST";
         // Casey: Save/Send/process the raw frame here?
         // Write the VideoFrame here!
+      LOG(DEBUG) << "wrting frame data" << std::endl;
       frame.mutable_raw_frame()->set_data(pixels, sizeof(pixels));
     }
     else if (s == VISIBLE or s == PRE)
     {
+        if (s == VISIBLE) {
+            LOG(DEBUG) << "scanline_cycle: s = VISIBLE";
+        } else {
+            LOG(DEBUG) << "scanline_cycle: s = PRE";
+        }
         // Sprites:
         switch (dot)
         {
