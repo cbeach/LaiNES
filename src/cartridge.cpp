@@ -8,6 +8,8 @@
 #include "mappers/mapper4.hpp"
 #include "ppu.hpp"
 #include "cartridge.hpp"
+#include "easylogging++.hpp"
+//el::Logger* dl = el::Loggers::getLogger("default");
 
 namespace Cartridge {
 
@@ -39,7 +41,7 @@ void signal_scanline()
 void load(const char* fileName)
 {
     FILE* f = fopen(fileName, "rb");
-
+    LOG(INFO) << "Cartridge::load(" << fileName << ")";
     fseek(f, 0, SEEK_END);
     int size = ftell(f);
     fseek(f, 0, SEEK_SET);
@@ -49,6 +51,9 @@ void load(const char* fileName)
     fclose(f);
 
     int mapperNum = (rom[7] & 0xF0) | (rom[6] >> 4);
+    LOG(INFO) << "mapperNum: " << mapperNum;
+    LOG(INFO) << "loaded: " << loaded();
+    LOG(INFO) << "mapper: " << mapper;
     if (loaded()) delete mapper;
     switch (mapperNum)
     {
@@ -58,6 +63,8 @@ void load(const char* fileName)
         case 3:  mapper = new Mapper3(rom); break;
         case 4:  mapper = new Mapper4(rom); break;
     }
+    LOG(INFO) << "loaded: " << loaded();
+    LOG(INFO) << "mapper: " << mapper;
 
     CPU::power();
     PPU::reset();

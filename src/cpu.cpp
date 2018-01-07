@@ -15,6 +15,7 @@ namespace CPU {
 
 MachineState input_state;
 VideoFrame output_frame;
+u32* pixel_buffer;
 
 
 int step_counter = 0;
@@ -33,10 +34,10 @@ inline int elapsed() { return TOTAL_CYCLES - remainingCycles; }
 /* Cycle emulation */
 #define T   tick()
 inline void tick() { 
-  PPU::step(input_state, output_frame); 
-  PPU::step(input_state, output_frame); 
-  PPU::step(input_state, output_frame); 
-  LOG(DEBUG) << "step " << step_counter++ << ": " << input_state.nes_console_state().game().name();
+  PPU::step(input_state, pixel_buffer); 
+  PPU::step(input_state, pixel_buffer); 
+  PPU::step(input_state, pixel_buffer); 
+  //LOG(DEBUG) << "step " << step_counter++ << ": " << input_state.nes_console_state().game().name();
   remainingCycles--; 
 }
 
@@ -272,10 +273,12 @@ void power()
 }
 
 /* Run the CPU for roughly a frame */
-void run_frame(MachineState& m_state, VideoFrame& frame)
+//void run_frame(MachineState& m_state, VideoFrame& frame)
+void run_frame(MachineState& m_state, u32* p_buff)
 {
   input_state = m_state;
-  output_frame = frame;
+  //output_frame = frame;
+  pixel_buffer = p_buff;
 
   remainingCycles += TOTAL_CYCLES;
 

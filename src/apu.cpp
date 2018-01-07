@@ -1,5 +1,6 @@
 #include "cpu.hpp"
 #include "apu.hpp"
+#include "easylogging++.hpp"
 
 namespace APU {
 

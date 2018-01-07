@@ -4,12 +4,15 @@
 #include "ppu.hpp"
 #include <execinfo.h>
 #include <iostream>
-
 #include "easylogging++.hpp"
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include "deep_thought.grpc.pb.h"
 using org::beachc::deep_thought::MachineState;
 using org::beachc::deep_thought::VideoFrame;
+using namespace std;
+using namespace cv;
 
 namespace PPU {
 #include "palette.inc"
@@ -272,32 +275,28 @@ void pixel()
 }
 
 /* Execute a cycle of a scanline */
-template<Scanline s> void scanline_cycle(MachineState& m_state, VideoFrame& frame)
+template<Scanline s> void scanline_cycle(MachineState& m_state, u32* pixel_buffer)
 {
     static u16 addr;
 
     if (s == NMI and dot == 1) { 
-      LOG(DEBUG) << "scanline_cycle: s = NMI";
       status.vBlank = true; 
       if (ctrl.nmi) {
         CPU::set_nmi(); 
       }
     }
     else if (s == POST and dot == 0) {
-      LOG(DEBUG) << "scanline_cycle: s = POST";
-        // Casey: Save/Send/process the raw frame here?
-        // Write the VideoFrame here!
-      LOG(DEBUG) << "wrting frame data" << std::endl;
-      frame.mutable_raw_frame()->set_data(pixels, sizeof(pixels));
+      memcpy(pixel_buffer, pixels, sizeof(pixels));
+      Mat raw_ppu(240, 256, CV_8UC4, (void*) pixel_buffer);
+      imshow("raw_ppu", raw_ppu);
+      //Mat before_encoding(240, 256, CV_8UC4, (void*) frame.raw_frame().data().c_str());
+      //imshow("before_encoding", before_encoding);
+      //LOG(INFO) << "sizeof(pixels): " << sizeof(pixels);
+      //Mat after_encoding(240, 256, CV_8UC4, (void*) frame.raw_frame().data().c_str());
+      //imshow("after_encoding", after_encoding);
     }
     else if (s == VISIBLE or s == PRE)
     {
-        if (s == VISIBLE) {
-            LOG(DEBUG) << "scanline_cycle: s = VISIBLE";
-        } else {
-            LOG(DEBUG) << "scanline_cycle: s = PRE";
-        }
-        // Sprites:
         switch (dot)
         {
             case   1: clear_oam(); if (s == PRE) { status.sprOvf = status.sprHit = false; } break;
@@ -342,14 +341,15 @@ template<Scanline s> void scanline_cycle(MachineState& m_state, VideoFrame& fram
 }
 
 /* Execute a PPU cycle. */
-void step(MachineState& m_state, VideoFrame& frame)
+//void step(MachineState& m_state, VideoFrame& frame)
+void step(MachineState& m_state, u32* pixel_buffer)
 {
     switch (scanline)
     {
-        case 0 ... 239:  scanline_cycle<VISIBLE>(m_state, frame); break;
-        case       240:  scanline_cycle<POST>(m_state, frame);    break;
-        case       241:  scanline_cycle<NMI>(m_state, frame);     break;
-        case       261:  scanline_cycle<PRE>(m_state, frame);     break;
+        case 0 ... 239:  scanline_cycle<VISIBLE>(m_state, pixel_buffer); break;
+        case       240:  scanline_cycle<POST>(m_state, pixel_buffer);    break;
+        case       241:  scanline_cycle<NMI>(m_state, pixel_buffer);     break;
+        case       261:  scanline_cycle<PRE>(m_state, pixel_buffer);     break;
     }
     // Update dot and scanline counters:
     if (++dot > 340)

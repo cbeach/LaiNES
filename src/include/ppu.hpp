@@ -90,7 +90,8 @@ union Addr
 
 template <bool write> u8 access(u16 index, u8 v = 0);
 void set_mirroring(Mirroring mode);
-void step(MachineState&, VideoFrame&);
+//void step(MachineState&, VideoFrame&);
+void step(MachineState&, u32*);
 void reset();
 
 

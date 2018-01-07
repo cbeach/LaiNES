@@ -18,12 +18,16 @@
 #include <grpc++/server_context.h>
 #include <grpc++/security/server_credentials.h>
 
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
 #include "easylogging++.hpp"
 INITIALIZE_EASYLOGGINGPP
 
 const int usecs_wait_time = 1000000;
 
 using namespace std;
+using namespace cv;
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -56,7 +60,9 @@ class NonForkingNESEmulatorImpl final : public Emulator::Service {
   Status play_game(ServerContext* context, ServerReaderWriter<VideoFrame, MachineState>* stream) override {
     LOG(DEBUG) << "start non-forking main loop" << endl;
     MachineState state;
+    u32 pixel_buffer[256 * 240];
     for (int i = 0; stream->Read(&state); i++) {
+      APU::init();
       VideoFrame frame;
       LOG(DEBUG) << "new state received" << endl;
       
@@ -65,11 +71,15 @@ class NonForkingNESEmulatorImpl final : public Emulator::Service {
         //Handle cases in which we're downloading the rom, or the rom is given as data 
         LOG(INFO) << "Beggining new game: " << state.nes_console_state().game().name().c_str()
           << " - " << state.nes_console_state().game().path().c_str() << endl;
+        LOG_AFTER_N(1, FATAL) << "Cartridge did not load properly!";
         Cartridge::load(state.nes_console_state().game().path().c_str()); 
-        APU::init();
       }
       //Run a frame, pass the state and frame variables by reference
-      CPU::run_frame(state, frame);
+      CPU::run_frame(state, pixel_buffer);
+      frame.mutable_raw_frame()->set_data(pixel_buffer, sizeof(pixel_buffer));
+      Mat img(240, 256, CV_8UC4, (void*) pixel_buffer);
+      imshow("main", img);
+      waitKey(30);
 
       //Put the machine state into the VideoFrame
       frame.mutable_machine_state()->CopyFrom(state);
@@ -239,7 +249,7 @@ void configureLoggerFromCode() {
   // To set GLOBAL configurations you may use
   //defaultConf.setGlobally(
   //  el::ConfigurationType::Format, "%date %msg");
-  el::Loggers::addFlag(el::LoggingFlag::HierarchicalLogging);
+  //el::Loggers::addFlag(el::LoggingFlag::HierarchicalLogging);
   el::Loggers::setDefaultConfigurations(defaultConf, true);
   el::Loggers::reconfigureAllLoggers(defaultConf);
 }

@@ -19,6 +19,8 @@ from __future__ import print_function
 from sys import exit
 
 import grpc
+import cv2
+import numpy as np
 
 import common_pb2_grpc
 import common_pb2
@@ -38,16 +40,20 @@ def generate_machine_states():
     )
   )
   while True:
-      yield ms
+    yield ms
 
 
 def play_game_stream(stub):
   m_state = generate_machine_states()
   responses = stub.play_game(m_state)
   counter = 0
-  for response in responses:
+  for i, response in enumerate(responses):
     counter += 1
-    print('frame# {}: {}'.format(i, response.raw_frame.data))
+
+    cv2.imshow('game session', img)
+		if cv2.waitKey(1) == 27:
+			break
+    #print('frame#: {} - len: {}: data: {}'.format(i, len(response.raw_frame.data), response.raw_frame.data))
 
 
 def run():
@@ -55,9 +61,11 @@ def run():
   stub = deep_thought_pb2_grpc.EmulatorStub(channel)
   print("-------------- play_game --------------")
   play_game_stream(stub)
-  #except KeyboardInterupt:
-  #  exit(0)
 
 
 if __name__ == '__main__':
-  run()
+  try:
+    run()
+  except Exception as e:
+    print(e)
+    exit(1)
