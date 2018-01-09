@@ -49,10 +49,10 @@ def play_game_stream(stub):
   counter = 0
   for i, response in enumerate(responses):
     counter += 1
-
+    img = np.reshape(np.frombuffer(response.raw_frame.data, dtype='uint8'), (240, 256, 4))
     cv2.imshow('game session', img)
-		if cv2.waitKey(1) == 27:
-			break
+    if cv2.waitKey(1) == 27:
+      break
     #print('frame#: {} - len: {}: data: {}'.format(i, len(response.raw_frame.data), response.raw_frame.data))
 
 
