@@ -77,9 +77,6 @@ class NonForkingNESEmulatorImpl final : public Emulator::Service {
       //Run a frame, pass the state and frame variables by reference
       CPU::run_frame(state, pixel_buffer);
       frame.mutable_raw_frame()->set_data(pixel_buffer, sizeof(pixel_buffer));
-      Mat img(240, 256, CV_8UC4, (void*) pixel_buffer);
-      imshow("main", img);
-      waitKey(30);
 
       //Put the machine state into the VideoFrame
       frame.mutable_machine_state()->CopyFrom(state);
@@ -92,6 +89,7 @@ class NonForkingNESEmulatorImpl final : public Emulator::Service {
     return Status::OK;
   }
 };
+
 class NESEmulatorImpl final : public Emulator::Service { 
   Status play_game(ServerContext* context, ServerReaderWriter<VideoFrame, MachineState>* stream) override {
     //Shared memory for ipc
@@ -139,7 +137,7 @@ class NESEmulatorImpl final : public Emulator::Service {
             APU::init();
           }
           //Run a frame, pass the state and frame variables by reference
-          CPU::run_frame(state, frame);
+          //CPU::run_frame(state, frame);
 
           //Put the machine state into the VideoFrame
           frame.mutable_machine_state()->CopyFrom(state);

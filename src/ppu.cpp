@@ -287,13 +287,6 @@ template<Scanline s> void scanline_cycle(MachineState& m_state, u32* pixel_buffe
     }
     else if (s == POST and dot == 0) {
       memcpy(pixel_buffer, pixels, sizeof(pixels));
-      Mat raw_ppu(240, 256, CV_8UC4, (void*) pixel_buffer);
-      imshow("raw_ppu", raw_ppu);
-      //Mat before_encoding(240, 256, CV_8UC4, (void*) frame.raw_frame().data().c_str());
-      //imshow("before_encoding", before_encoding);
-      //LOG(INFO) << "sizeof(pixels): " << sizeof(pixels);
-      //Mat after_encoding(240, 256, CV_8UC4, (void*) frame.raw_frame().data().c_str());
-      //imshow("after_encoding", after_encoding);
     }
     else if (s == VISIBLE or s == PRE)
     {
