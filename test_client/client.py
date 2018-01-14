@@ -30,7 +30,6 @@ def generate_constant_machine_states():
 
 def get_input_state(controller, frame_rate=math.inf):
     while True:
-        print(1 / frame_rate)
         time.sleep(1 / frame_rate)
         ms = deep_thought_pb2.MachineState(
             nes_console_state=nes_pb2.NESConsoleState(

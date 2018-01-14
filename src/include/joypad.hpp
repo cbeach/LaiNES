@@ -6,8 +6,8 @@ using org::beachc::deep_thought::nes::NESControllerState;
 namespace Joypad {
 
 
-u8 read_state(NESControllerState);
-void write_strobe(bool v);
+u8 read_state(int, NESControllerState);
+void write_strobe(bool, NESControllerState);
 
 
 }
