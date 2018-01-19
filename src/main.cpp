@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <iostream>
+#include <string.h>
 
 #include "apu.hpp"
 #include "cartridge.hpp"
@@ -24,7 +25,7 @@
 #include "easylogging++.hpp"
 INITIALIZE_EASYLOGGINGPP
 
-const int usecs_wait_time = 1000000;
+const int usecs_wait_time = 10;
 
 using namespace std;
 using namespace cv;
@@ -99,6 +100,9 @@ class NESEmulatorImpl final : public Emulator::Service {
     void* shared_frame_buffer = create_shared_memory(MB);
     void* shared_state_buffer = create_shared_memory(MB);
 
+    int* state_buffer_size = (int*) create_shared_memory(sizeof(int));
+    int* frame_buffer_size = (int*) create_shared_memory(sizeof(int));
+
     bool* frame_ready = (bool*) create_shared_memory(sizeof(bool));
     bool* state_ready = (bool*) create_shared_memory(sizeof(bool));
 
@@ -111,9 +115,12 @@ class NESEmulatorImpl final : public Emulator::Service {
     if (pid == 0) {
       //Child process
       
+      int frame_number = 0;
+      u32 pixel_buffer[256 * 240];
       LOG(DEBUG) << "child: starting main loop" << endl;
       for (int i = 0; true; i++) {
         LOG(DEBUG) << "child: check if state is ready - lock value is: " << *state_ready << endl;
+        APU::init();
         // Check to see if the state is ready
         if (*state_ready == true) {
           MachineState state; 
@@ -122,7 +129,7 @@ class NESEmulatorImpl final : public Emulator::Service {
           LOG(DEBUG) << "child: parsing shared state buffer" << endl;
 
           // Parse the state out of shared memory
-          if (state.ParseFromString(std::string((char*) shared_state_buffer))) {
+          if (state.ParseFromArray(shared_state_buffer, (unsigned long) *state_buffer_size)) {
             LOG(DEBUG) << "child: successfully parsed the state" << endl;
           } else {
             LOG(FATAL) << "child: failed to parse the state" << endl;
@@ -134,20 +141,19 @@ class NESEmulatorImpl final : public Emulator::Service {
             LOG(INFO) << "Beggining new game: " << state.nes_console_state().game().name().c_str()
               << " - " << state.nes_console_state().game().path().c_str() << endl;
             Cartridge::load(state.nes_console_state().game().path().c_str()); 
-            APU::init();
           }
           //Run a frame, pass the state and frame variables by reference
-          //CPU::run_frame(state, frame);
+          CPU::run_frame(state, pixel_buffer);
 
           //Put the machine state into the VideoFrame
           frame.mutable_machine_state()->CopyFrom(state);
+          frame.mutable_raw_frame()->set_data(pixel_buffer, sizeof(pixel_buffer));
 
           //Serialize the VideoFrame and and copy it into shared memory
           std::string private_frame_buffer;
-          if (frame.SerializeToString(&private_frame_buffer)) {
-            memcpy((void*) shared_frame_buffer, (void*) private_frame_buffer.c_str(), 
-                private_frame_buffer.length() + 1);
-            LOG(DEBUG) << "child: frame serialization successfull - copying frame buffer of size " << sizeof(private_frame_buffer) << " to shared memory" << endl;
+          if (frame.SerializeToArray(shared_frame_buffer, MB)) {
+            *frame_buffer_size = frame.ByteSize();
+            LOG(DEBUG) << "child: frame serialization successfull - copying frame buffer of size " << frame.ByteSize() << " to shared memory" << endl;
             LOG(DEBUG) << "child: shared frame buffer value is: " << (char*) shared_frame_buffer << endl;
           } else {
             LOG(FATAL) << "child: failed frame serialization" << endl;
@@ -156,6 +162,8 @@ class NESEmulatorImpl final : public Emulator::Service {
           LOG(DEBUG) << "child: update the shared locks" << endl;
           *state_ready = false;
           *frame_ready = true;
+          LOG(INFO) << "frame_number: " << frame_number;
+          frame_number++;
         } else {
           usleep(usecs_wait_time);
         }
@@ -165,16 +173,20 @@ class NESEmulatorImpl final : public Emulator::Service {
       //while (stream->Read(shared_state_buffer)) {
       LOG(DEBUG) << "parent: start main loop" << endl;
       MachineState state;
+      MachineState temp_state;
       for (int i = 0; stream->Read(&state); i++) {
         std::string private_state_buffer;
         LOG(DEBUG) << "parent: Beginning serialization" << endl;
         //Received a new event from the user.
         //Serialize it and copy the resulting data into the shared memory
-        if (state.SerializeToString(&private_state_buffer)) {
-          memcpy((void*) shared_state_buffer, (void*) private_state_buffer.c_str(), 
-              private_state_buffer.length() + 1);
-          LOG(DEBUG) << "parent: state serialization successfull - copying state buffer of size " << sizeof(private_state_buffer) << " to shared memory" << endl;
-          LOG(DEBUG) << "parent: shared state buffer value is: " << (char*) shared_state_buffer << endl;
+        LOG(DEBUG) << "parent: Game path: " << state.nes_console_state().game().path();
+        if (state.SerializeToArray(shared_state_buffer, MB)) {
+          *state_buffer_size = state.ByteSize();
+          LOG(DEBUG) << "parent: state serialization successfull - copying state buffer of size " << state.ByteSize() << " to shared memory" << endl;
+          //for(int i = 0; i < private_state_buffer.length() + 1; i++) {
+          //  LOG(DEBUG) << "parent: shared state buffer value is: " << (int) ((u8*) shared_state_buffer)[i] << endl;
+          //  LOG(DEBUG) << "parent: shared state buffer value is: " << (int) private_state_buffer[i] << endl;
+          //}
         } else {
           LOG(FATAL) << "parent: failed state serialization" << endl;
         }
@@ -195,7 +207,7 @@ class NESEmulatorImpl final : public Emulator::Service {
           //Parse the video frame out of memory
           VideoFrame frame;
           LOG(DEBUG) << "parent: shared frame buffer value is: " << (char*) shared_frame_buffer << endl;
-          if (frame.ParseFromString(std::string((char*) shared_frame_buffer))) {
+          if (frame.ParseFromArray(shared_frame_buffer, (unsigned long) *frame_buffer_size)) {
             LOG(DEBUG) << "parent: successfully parsed the frame" << endl;
           } else {
             LOG(ERROR) << "parent: failed to parse the frame" << endl;
@@ -258,7 +270,8 @@ int main(int argc, char *argv[]) {
   configureLoggerFromFile("./easylogging.conf");
 
   std::string server_address("0.0.0.0:50051");
-  NonForkingNESEmulatorImpl emulator;
+  NESEmulatorImpl emulator;
+  //NonForkingNESEmulatorImpl emulator;
   ServerBuilder builder;
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&emulator);
