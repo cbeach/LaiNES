@@ -19,16 +19,12 @@
 #include <grpc++/server_context.h>
 #include <grpc++/security/server_credentials.h>
 
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-
 #include "easylogging++.hpp"
 INITIALIZE_EASYLOGGINGPP
 
 const int usecs_wait_time = 10;
 
 using namespace std;
-using namespace cv;
 
 using grpc::Server;
 using grpc::ServerBuilder;

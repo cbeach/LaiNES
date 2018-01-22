@@ -36,7 +36,7 @@ def get_input_state(controller, frame_rate=math.inf):
                 player1_input=controller.state(),
                 game=common_pb2.Game(
                     name="Super Mario Brothers",
-                    path="/home/mcsmash/dev/emulators/LaiNES/smb.nes"
+                    path="/home/app/smb.nes"
                 )
             )
         )

@@ -10,13 +10,11 @@ flags = [
   '-std=c++14',
   '-I/usr/local/include/google/protobuf/',
   '-L/usr/local/lib',
-  '-lgrpc++',
   '-pthread',
-  '-lprotobuf',
   '-lpthread',
-  '-lopencv_core',
-  '-lopencv_imgproc',
-  '-lopencv_highgui',
+  '-lgrpc',
+  '-lgrpc++',
+  '-lprotobuf',
 ]
 
 env = Environment(ENV       = environ,

@@ -5,14 +5,11 @@
 #include <execinfo.h>
 #include <iostream>
 #include "easylogging++.hpp"
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 
 #include "deep_thought.grpc.pb.h"
 using org::beachc::deep_thought::MachineState;
 using org::beachc::deep_thought::VideoFrame;
 using namespace std;
-using namespace cv;
 
 namespace PPU {
 #include "palette.inc"
