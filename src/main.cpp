@@ -19,6 +19,8 @@
 #include <grpc++/server_context.h>
 #include <grpc++/security/server_credentials.h>
 
+#include <libcouchbase/couchbase++.h>
+
 #include "easylogging++.hpp"
 INITIALIZE_EASYLOGGINGPP
 

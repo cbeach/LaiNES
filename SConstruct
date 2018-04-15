@@ -22,7 +22,7 @@ env = Environment(ENV       = environ,
                   CPPFLAGS  = ['-Wno-unused-value'],
                   CXXFLAGS  = flags,
                   LINKFLAGS = flags,
-                  CPPPATH   = ['#simpleini', '#lib/include', '#src/include', '#lib/data_contracts/cpp'],
+                  CPPPATH   = ['#simpleini', '#lib/include', '#lib/include/libcouchbase/', '#src/include', '#lib/data_contracts/cpp'],
                   LIBS      = [])
 
 env.Program('laines', Glob('build/*/*.cpp') + Glob('build/*/*/*.cpp') + Glob('build/*/*/*/*.cc'))

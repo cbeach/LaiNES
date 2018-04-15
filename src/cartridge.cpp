@@ -8,6 +8,9 @@
 #include "mappers/mapper4.hpp"
 #include "ppu.hpp"
 #include "cartridge.hpp"
+
+#include <libcouchbase/couchbase++.h>
+
 #include "easylogging++.hpp"
 //el::Logger* dl = el::Loggers::getLogger("default");
 
@@ -37,6 +40,9 @@ void signal_scanline()
     mapper->signal_scanline();
 }
 
+void loadFromCouchbase(String Bucket, String platform, String game) {
+
+}
 /* Load the ROM from a file. */
 void load(const char* fileName)
 {
