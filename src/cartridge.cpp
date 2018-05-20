@@ -42,6 +42,9 @@ void load(const char* fileName)
 {
     FILE* f = fopen(fileName, "rb");
     LOG(INFO) << "Cartridge::load(" << fileName << ")";
+    if (f == 0) {
+      LOG(FATAL) << "Error loading" << fileName;
+    }
     fseek(f, 0, SEEK_END);
     int size = ftell(f);
     fseek(f, 0, SEEK_SET);

@@ -191,7 +191,7 @@ class NESEmulatorImpl final : public Emulator::Service {
 
         //Wait for the child process to make a new VideoFrame available
         while (*frame_ready == false) { 
-          LOG(DEBUG) << "parent: frame lock value is: " << *frame_ready << " sleeping" << endl;
+          //LOG(DEBUG) << "parent: frame lock value is: " << *frame_ready << " sleeping" << endl;
           usleep(usecs_wait_time); 
         }
 
