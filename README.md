@@ -1,6 +1,11 @@
 LaiNES
 ======
 
+Docker Update
+=============
+
+> docker run -p "50051:50051" -e "LD_LIBRARY_PATH=/home/app/lib" -v "$(pwd)/smb.nes:/home/app/smb.nes" laines /sbin/my_init -- /home/app/laines
+
 Compact, cycle-accurate NES emulator in ~1000 lines of C++.
 
 ![File Browser](http://i.imgur.com/2tuDlCw.png)
